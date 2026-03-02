@@ -1,0 +1,54 @@
+# ═══════════════════════════════════════════════════
+# Docker Compose - Full Stack Deployment
+# Runs backend API + frontend together
+# ═══════════════════════════════════════════════════
+#
+# Usage:
+#   docker-compose up --build        # Build and start
+#   docker-compose up -d             # Start in background
+#   docker-compose down              # Stop all services
+#   docker-compose logs -f backend   # View backend logs
+
+version: "3.9"
+
+services:
+  # ── Backend API ──────────────────────────────────
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: sentiment-chatbot-api
+    ports:
+      - "8000:8000"
+    environment:
+      - APP_NAME=Sentiment Chatbot API
+      - DEBUG=False
+      - HOST=0.0.0.0
+      - PORT=8000
+      - LOG_LEVEL=INFO
+      - CORS_ORIGINS=http://localhost:5173,http://localhost:3000,http://localhost:80
+    volumes:
+      - ./ml/trained_model:/app/ml/trained_model  # Persist trained model
+      - backend-data:/app/backend/data             # Persist database
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ── Frontend (Development) ──────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: sentiment-chatbot-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  backend-data:

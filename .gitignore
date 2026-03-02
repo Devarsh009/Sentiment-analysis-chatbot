@@ -1,0 +1,63 @@
+# ═══════════════════════════════════════════════════
+# .gitignore - Sentiment Chatbot Project
+# ═══════════════════════════════════════════════════
+
+# ── Python ────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+*.egg
+
+# ── Virtual Environment ──────────────────────────
+venv/
+env/
+.venv/
+.env
+
+# ── ML / Model Files ─────────────────────────────
+ml/trained_model/
+ml/logs/
+ml/data/
+*.pt
+*.pth
+*.bin
+*.safetensors
+*.onnx
+
+# ── Database ──────────────────────────────────────
+*.db
+*.sqlite3
+
+# ── Logs ──────────────────────────────────────────
+*.log
+logs/
+
+# ── Node.js / Frontend ───────────────────────────
+node_modules/
+frontend/dist/
+frontend/build/
+.DS_Store
+
+# ── IDE / Editor ─────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ── Docker ────────────────────────────────────────
+docker-compose.override.yml
+
+# ── OS Files ──────────────────────────────────────
+Thumbs.db
+.DS_Store
+desktop.ini
+
+# ── Environment Files ────────────────────────────
+.env
+!backend/.env.example
+!frontend/.env

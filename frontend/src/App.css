@@ -1,0 +1,64 @@
+/* ═══════════════════════════════════════════════════
+   App Layout Styles
+   ═══════════════════════════════════════════════════ */
+
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.app-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.chat-area {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+/* ─── Error Banner ────────────────────────────────── */
+.error-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 24px;
+  background: rgba(239, 68, 68, 0.1);
+  border-bottom: 1px solid rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
+  font-size: 13px;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.error-dismiss {
+  background: none;
+  border: none;
+  color: #fca5a5;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.error-dismiss:hover {
+  background: rgba(239, 68, 68, 0.2);
+}
+
+/* ─── Responsive ──────────────────────────────────── */
+@media (max-width: 768px) {
+  .app-body {
+    flex-direction: column;
+  }
+}
+
+/* ─── Keyframes (for inline styles) ───────────────── */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
