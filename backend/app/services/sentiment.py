@@ -170,18 +170,23 @@ class SentimentService:
     """
     
     _predictor = None
+    _load_attempted = False
     
     def __init__(self):
         """Initialize the sentiment service."""
-        if SentimentService._predictor is None:
+        if not SentimentService._load_attempted:
             self._load_predictor()
     
     def _load_predictor(self):
-        """Load the ML predictor."""
+        """Load the ML predictor. Gracefully skips if PyTorch/Transformers unavailable."""
+        SentimentService._load_attempted = True
         try:
             from inference import SentimentPredictor
             SentimentService._predictor = SentimentPredictor()
             logger.info("Sentiment predictor loaded successfully")
+        except ImportError:
+            logger.warning("ML dependencies (torch/transformers) not available — using fallback")
+            SentimentService._predictor = None
         except Exception as e:
             logger.error(f"Failed to load sentiment predictor: {e}")
             SentimentService._predictor = None

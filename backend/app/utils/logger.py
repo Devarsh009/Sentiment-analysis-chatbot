@@ -70,19 +70,22 @@ def setup_logger(level: str = "INFO", log_file: str = "app.log"):
     console_handler.setFormatter(console_format)
     root_logger.addHandler(console_handler)
     
-    # ── File Handler ──
-    log_dir = os.path.dirname(log_file) if os.path.dirname(log_file) else "."
-    os.makedirs(log_dir, exist_ok=True)
-    
-    file_handler = logging.FileHandler(log_file, encoding="utf-8")
-    file_handler.setLevel(logging.DEBUG)
-    
-    file_format = logging.Formatter(
-        fmt="%(asctime)s | %(levelname)-8s | %(name)s | %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
-    )
-    file_handler.setFormatter(file_format)
-    root_logger.addHandler(file_handler)
+    # ── File Handler (skip if filesystem is read-only) ──
+    try:
+        log_dir = os.path.dirname(log_file) if os.path.dirname(log_file) else "."
+        os.makedirs(log_dir, exist_ok=True)
+        
+        file_handler = logging.FileHandler(log_file, encoding="utf-8")
+        file_handler.setLevel(logging.DEBUG)
+        
+        file_format = logging.Formatter(
+            fmt="%(asctime)s | %(levelname)-8s | %(name)s | %(message)s",
+            datefmt="%Y-%m-%d %H:%M:%S",
+        )
+        file_handler.setFormatter(file_format)
+        root_logger.addHandler(file_handler)
+    except OSError:
+        pass  # Read-only filesystem (e.g., Vercel serverless)
     
     # Reduce noise from third-party libraries
     logging.getLogger("uvicorn.access").setLevel(logging.WARNING)
