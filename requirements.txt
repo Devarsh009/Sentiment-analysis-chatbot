@@ -1,7 +1,0 @@
-# Vercel serverless Python dependencies (lightweight — no PyTorch/Transformers)
-fastapi>=0.100.0
-pydantic>=2.0.0
-pydantic-settings>=2.0.0
-python-dotenv>=1.0.0
-python-multipart>=0.0.20
-groq>=0.4.0
