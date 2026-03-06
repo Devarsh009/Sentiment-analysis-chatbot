@@ -67,6 +67,7 @@ class SentimentPredictor:
         self.tokenizer = None
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.is_loaded = False
+        self.is_trained = False
         self._initialized = True
         
         # Try to load the model
@@ -84,8 +85,9 @@ class SentimentPredictor:
                 self.model = AutoModelForSequenceClassification.from_pretrained(
                     self.model_dir
                 )
+                self.is_trained = True
             else:
-                print(f"⚠️  No trained model found. Loading base model: {MODEL_NAME}")
+                print(f"⚠️  No trained model found. Using keyword-based analysis.")
                 print(f"   Run 'python ml/train.py' to train a custom model.")
                 self.tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
                 self.model = AutoModelForSequenceClassification.from_pretrained(
@@ -94,6 +96,7 @@ class SentimentPredictor:
                     id2label=LABEL_MAP,
                     label2id={v: k for k, v in LABEL_MAP.items()},
                 )
+                self.is_trained = False
             
             self.model.to(self.device)
             self.model.eval()  # Set to evaluation mode

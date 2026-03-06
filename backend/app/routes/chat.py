@@ -61,10 +61,12 @@ async def chat(request: ChatRequest):
         
         sentiment = analysis["sentiment"]
         confidence = analysis["confidence"]
+        emotion = analysis.get("emotion", "normal")
         
         # ── Step 2: Get Conversation Context ──
         db = DatabaseService()
         previous_sentiments = db.get_session_sentiments(session_id)
+        conversation_history = db.get_conversation_history(session_id)
         
         # ── Step 3: Generate Response ──
         chatbot = ChatbotService()
@@ -73,6 +75,8 @@ async def chat(request: ChatRequest):
             sentiment=sentiment,
             confidence=confidence,
             previous_sentiments=previous_sentiments,
+            conversation_history=conversation_history,
+            emotion=emotion,
         )
         
         # ── Step 4: Store Interaction ──
@@ -89,6 +93,7 @@ async def chat(request: ChatRequest):
             reply=reply,
             sentiment=sentiment,
             confidence=confidence,
+            emotion=emotion,
             session_id=session_id,
         )
         

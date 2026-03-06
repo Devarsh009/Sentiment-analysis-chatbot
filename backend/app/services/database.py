@@ -263,6 +263,36 @@ class DatabaseService:
             "daily_counts": {},
         }
     
+    def get_conversation_history(self, session_id: str, limit: int = 6) -> list:
+        """
+        Get recent conversation history for LLM context.
+
+        Returns list of dicts with 'role' and 'content' keys.
+        """
+        try:
+            conn = DatabaseService._connection
+            if conn is None:
+                return []
+
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT message, bot_response FROM messages
+                WHERE session_id = ?
+                ORDER BY timestamp DESC
+                LIMIT ?
+            """, (session_id, limit))
+
+            history = []
+            for row in reversed(cursor.fetchall()):
+                history.append({"role": "user", "content": row["message"]})
+                if row["bot_response"]:
+                    history.append({"role": "assistant", "content": row["bot_response"]})
+            return history
+
+        except Exception as e:
+            logger.error(f"Conversation history query failed: {e}")
+            return []
+
     def close(self):
         """Close the database connection."""
         if DatabaseService._connection:

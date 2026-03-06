@@ -37,6 +37,9 @@ class Settings(BaseSettings):
     # ─── Database Settings ───────────────────────────────────────────────
     DATABASE_URL: str = "sqlite:///./chatbot.db"
     
+    # ─── Groq LLM Settings ────────────────────────────────────────────────
+    GROQ_API_KEY: str = ""
+
     # ─── Rate Limiting ───────────────────────────────────────────────────
     RATE_LIMIT_REQUESTS: int = 60       # Max requests per window
     RATE_LIMIT_WINDOW: int = 60         # Window in seconds
@@ -51,7 +54,9 @@ class Settings(BaseSettings):
         return [origin.strip() for origin in self.CORS_ORIGINS.split(",")]
     
     class Config:
-        env_file = ".env"
+        env_file = os.path.join(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env"
+        )
         env_file_encoding = "utf-8"
         case_sensitive = True
 

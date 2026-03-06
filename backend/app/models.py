@@ -109,6 +109,7 @@ class ChatResponse(BaseModel):
     reply: str = Field(..., description="Chatbot's response message")
     sentiment: str = Field(..., description="Detected sentiment of user's message")
     confidence: float = Field(..., description="Sentiment prediction confidence")
+    emotion: str = Field("normal", description="Granular emotion label (angry, sad, frustrated, worried, disappointed, excited, grateful, happy, proud, curious, confused, thoughtful, normal)")
     session_id: Optional[str] = Field(None, description="Session ID")
     timestamp: str = Field(
         default_factory=lambda: datetime.now().isoformat(),

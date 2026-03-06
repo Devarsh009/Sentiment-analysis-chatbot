@@ -23,7 +23,6 @@ import argparse
 import numpy as np
 from datetime import datetime
 
-from datasets import load_metric
 from transformers import (
     AutoTokenizer,
     AutoModelForSequenceClassification,
@@ -89,6 +88,7 @@ def train_model(
     batch_size: int = BATCH_SIZE,
     learning_rate: float = LEARNING_RATE,
     output_dir: str = MODEL_OUTPUT_DIR,
+    max_train_samples: int = None,
 ):
     """
     Main training function that fine-tunes DistilBERT for sentiment analysis.
@@ -110,7 +110,7 @@ def train_model(
         output_dir: Where to save the trained model
     """
     print("=" * 60)
-    print("🚀 SENTIMENT MODEL TRAINING")
+    print(">> SENTIMENT MODEL TRAINING")
     print("=" * 60)
     print(f"   Model: {MODEL_NAME}")
     print(f"   Epochs: {epochs}")
@@ -120,18 +120,23 @@ def train_model(
     print("=" * 60)
     
     # ─── Step 1: Load Dataset ────────────────────────────────────────────
-    print("\n📦 Step 1: Loading Dataset...")
+    print("\n[Step 1] Loading Dataset...")
     if custom_csv:
         dataset = load_custom_dataset(custom_csv)
     else:
         dataset = load_huggingface_dataset(dataset_name)
     
     # ─── Step 2: Tokenize Dataset ────────────────────────────────────────
-    print("\n🔤 Step 2: Tokenizing Dataset...")
+    print("\n[Step 2] Tokenizing Dataset...")
     tokenized_dataset = tokenize_dataset(dataset)
     
+    # Optionally limit training samples for faster training on CPU
+    if max_train_samples and max_train_samples < len(tokenized_dataset["train"]):
+        print(f"   Using subset: {max_train_samples} train samples")
+        tokenized_dataset["train"] = tokenized_dataset["train"].shuffle(seed=42).select(range(max_train_samples))
+    
     # ─── Step 3: Load Pretrained Model ───────────────────────────────────
-    print(f"\n🧠 Step 3: Loading {MODEL_NAME} with {NUM_LABELS}-class head...")
+    print(f"\n[Step 3] Loading {MODEL_NAME} with {NUM_LABELS}-class head...")
     
     # AutoModelForSequenceClassification adds a classification head
     # on top of the pretrained transformer
@@ -144,10 +149,10 @@ def train_model(
     
     tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
     
-    print(f"   ✅ Model loaded: {model.num_parameters():,} parameters")
+    print(f"   Model loaded: {model.num_parameters():,} parameters")
     
     # ─── Step 4: Configure Training Arguments ────────────────────────────
-    print("\n⚙️  Step 4: Configuring Training...")
+    print("\n[Step 4] Configuring Training...")
     
     # Create output directories
     os.makedirs(output_dir, exist_ok=True)
@@ -170,7 +175,7 @@ def train_model(
         gradient_accumulation_steps=GRADIENT_ACCUMULATION_STEPS,
         
         # Evaluation Settings
-        evaluation_strategy="epoch",     # Evaluate after each epoch
+        eval_strategy="epoch",           # Evaluate after each epoch
         save_strategy="epoch",           # Save checkpoint each epoch
         load_best_model_at_end=True,     # Load best model when done
         metric_for_best_model="f1",      # Use F1 to pick best model
@@ -190,7 +195,7 @@ def train_model(
     )
     
     # ─── Step 5: Initialize Trainer ──────────────────────────────────────
-    print("\n🏋️  Step 5: Initializing Trainer...")
+    print("\n[Step 5] Initializing Trainer...")
     
     trainer = Trainer(
         model=model,
@@ -198,14 +203,14 @@ def train_model(
         train_dataset=tokenized_dataset["train"],
         eval_dataset=tokenized_dataset["validation"],
         compute_metrics=compute_metrics,
-        tokenizer=tokenizer,
+        processing_class=tokenizer,
         callbacks=[
             EarlyStoppingCallback(early_stopping_patience=2),
         ],
     )
     
     # ─── Step 6: Train! ─────────────────────────────────────────────────
-    print("\n🔥 Step 6: Training Started!")
+    print("\n[Step 6] Training Started!")
     print("-" * 40)
     
     start_time = datetime.now()
@@ -215,11 +220,11 @@ def train_model(
     training_time = end_time - start_time
     
     print("-" * 40)
-    print(f"✅ Training complete in {training_time}")
+    print(f"Training complete in {training_time}")
     print(f"   Final train loss: {train_result.training_loss:.4f}")
     
     # ─── Step 7: Evaluate ────────────────────────────────────────────────
-    print("\n📊 Step 7: Final Evaluation...")
+    print("\n[Step 7] Final Evaluation...")
     eval_results = trainer.evaluate()
     
     print(f"   Eval Loss:      {eval_results['eval_loss']:.4f}")
@@ -229,7 +234,7 @@ def train_model(
     print(f"   Eval F1:        {eval_results['eval_f1']:.4f}")
     
     # ─── Step 8: Save Model ─────────────────────────────────────────────
-    print(f"\n💾 Step 8: Saving model to {output_dir}...")
+    print(f"\n[Step 8] Saving model to {output_dir}...")
     
     # Save the model and tokenizer
     trainer.save_model(output_dir)
@@ -248,17 +253,17 @@ def train_model(
         for key, value in eval_results.items():
             f.write(f"{key}: {value:.4f}\n")
     
-    print(f"   ✅ Model saved successfully!")
-    print(f"   ✅ Metrics saved to {metrics_path}")
+    print(f"   Model saved successfully!")
+    print(f"   Metrics saved to {metrics_path}")
     
     # ─── Step 9: Push to Hub (optional) ──────────────────────────────────
     if PUSH_TO_HUB:
-        print(f"\n☁️  Step 9: Pushing to HuggingFace Hub...")
+        print(f"\n[Step 9] Pushing to HuggingFace Hub...")
         trainer.push_to_hub()
-        print(f"   ✅ Model pushed to: {HF_HUB_MODEL_ID}")
+        print(f"   Model pushed to: {HF_HUB_MODEL_ID}")
     
     print("\n" + "=" * 60)
-    print("🎉 TRAINING COMPLETE!")
+    print("TRAINING COMPLETE!")
     print("=" * 60)
     
     return trainer, eval_results
@@ -278,6 +283,8 @@ if __name__ == "__main__":
                        help=f"Learning rate (default: {LEARNING_RATE})")
     parser.add_argument("--output", type=str, default=MODEL_OUTPUT_DIR,
                        help=f"Output directory (default: {MODEL_OUTPUT_DIR})")
+    parser.add_argument("--max-samples", type=int, default=None,
+                       help="Max training samples (for faster CPU training)")
     
     args = parser.parse_args()
     
@@ -288,4 +295,5 @@ if __name__ == "__main__":
         batch_size=args.batch_size,
         learning_rate=args.lr,
         output_dir=args.output,
+        max_train_samples=args.max_samples,
     )

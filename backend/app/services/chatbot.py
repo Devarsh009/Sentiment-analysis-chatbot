@@ -1,17 +1,19 @@
 """
 Chatbot Response Service
 =========================
-Generates sentiment-aware chatbot responses.
+Generates sentiment-aware chatbot responses using Groq LLM.
+Falls back to template responses if Groq is unavailable.
 
 Response Strategy:
-    - NEGATIVE sentiment → Empathetic, supportive tone
-    - POSITIVE sentiment → Enthusiastic, encouraging tone
-    - NEUTRAL sentiment  → Standard informative tone
+    - Uses Groq LLM (Llama 3.3 70B) for intelligent responses
+    - Sentiment from DistilBERT guides the LLM's tone
+    - Template fallback if no API key or API error
 """
 
 import random
 from typing import Dict
 from app.utils.logger import get_logger
+from app.services.groq_llm import GroqService
 
 logger = get_logger(__name__)
 
@@ -99,34 +101,38 @@ class ChatbotService:
         sentiment: str, 
         confidence: float,
         previous_sentiments: list = None,
+        conversation_history: list = None,
+        emotion: str = "normal",
     ) -> str:
         """
-        Generate a response with conversation context awareness.
-        
-        If the user has been consistently negative, offer more support.
-        If consistently positive, match their energy.
-        
-        Args:
-            message: Current user message
-            sentiment: Current detected sentiment
-            confidence: Current prediction confidence
-            previous_sentiments: List of previous sentiment labels
-        
-        Returns:
-            Context-aware response string
+        Generate a response using Groq LLM with sentiment context.
+        Falls back to templates if Groq is unavailable.
         """
+        # Try Groq LLM first
+        groq = GroqService()
+        if groq.is_available:
+            llm_response = groq.generate_response(
+                message=message,
+                sentiment=sentiment,
+                confidence=confidence,
+                conversation_history=conversation_history,
+                emotion=emotion,
+            )
+            if llm_response:
+                return llm_response
+
+        # Fallback to template responses
+        logger.info("Using template fallback (Groq unavailable)")
         response = self.generate_response(message, sentiment, confidence)
         
-        # Check for persistent negative sentiment
         if previous_sentiments and len(previous_sentiments) >= 3:
             recent = previous_sentiments[-3:]
             if all(s == "negative" for s in recent):
                 response += (
-                    "\n\n💙 I've noticed you might be having a rough time. "
+                    "\n\nI've noticed you might be having a rough time. "
                     "Remember, it's completely okay to seek support. "
                     "If you need someone to talk to, don't hesitate to "
                     "reach out to friends, family, or a professional."
                 )
-                logger.info("Added persistent negative sentiment support message")
         
         return response

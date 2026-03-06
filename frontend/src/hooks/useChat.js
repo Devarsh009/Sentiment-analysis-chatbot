@@ -66,6 +66,7 @@ export function useChat() {
           sender: 'bot',
           sentiment: response.sentiment,
           confidence: response.confidence,
+          emotion: response.emotion || 'normal',
           timestamp: response.timestamp,
         };
 

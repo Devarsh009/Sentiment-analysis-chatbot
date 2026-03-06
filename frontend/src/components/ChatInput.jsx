@@ -1,35 +1,36 @@
 /**
- * ChatInput Component
- * =====================
- * Text input field with send button for composing messages.
- * Supports Enter key to send and Shift+Enter for new lines.
+ * ChatInput — Polished centered input bar with smooth interactions
  */
 
 import React, { useState, useRef, useEffect } from 'react';
 
 export default function ChatInput({ onSend, isLoading }) {
   const [text, setText] = useState('');
-  const inputRef = useRef(null);
+  const [focused, setFocused] = useState(false);
+  const textareaRef = useRef(null);
 
-  // Auto-focus on mount
   useEffect(() => {
-    if (inputRef.current) {
-      inputRef.current.focus();
-    }
+    textareaRef.current?.focus();
   }, []);
 
-  // Re-focus after loading completes
   useEffect(() => {
-    if (!isLoading && inputRef.current) {
-      inputRef.current.focus();
-    }
+    if (!isLoading) textareaRef.current?.focus();
   }, [isLoading]);
+
+  useEffect(() => {
+    const el = textareaRef.current;
+    if (el) {
+      el.style.height = 'auto';
+      el.style.height = Math.min(el.scrollHeight, 200) + 'px';
+    }
+  }, [text]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (text.trim() && !isLoading) {
       onSend(text.trim());
       setText('');
+      if (textareaRef.current) textareaRef.current.style.height = 'auto';
     }
   };
 
@@ -40,132 +41,119 @@ export default function ChatInput({ onSend, isLoading }) {
     }
   };
 
+  const canSend = text.trim() && !isLoading;
+
   return (
-    <form onSubmit={handleSubmit} style={styles.form}>
-      <div style={styles.inputContainer}>
-        <textarea
-          ref={inputRef}
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder={isLoading ? 'Waiting for response...' : 'Type your message...'}
-          disabled={isLoading}
-          rows={1}
-          style={{
-            ...styles.input,
-            ...(isLoading ? styles.inputDisabled : {}),
-          }}
-        />
+    <div style={styles.wrapper}>
+      <form onSubmit={handleSubmit} style={styles.form}>
+        <div style={{
+          ...styles.inputBox,
+          borderColor: focused ? 'rgba(16, 163, 127, 0.5)' : 'var(--color-border)',
+          boxShadow: focused ? '0 0 0 1px rgba(16, 163, 127, 0.15)' : 'none',
+        }}>
+          <textarea
+            ref={textareaRef}
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            onKeyDown={handleKeyDown}
+            onFocus={() => setFocused(true)}
+            onBlur={() => setFocused(false)}
+            placeholder="Message Sentiment Bot..."
+            disabled={isLoading}
+            rows={1}
+            style={styles.textarea}
+          />
 
-        <button
-          type="submit"
-          disabled={!text.trim() || isLoading}
-          style={{
-            ...styles.sendButton,
-            ...(text.trim() && !isLoading ? styles.sendButtonActive : {}),
-          }}
-          title="Send message"
-        >
-          {isLoading ? (
-            <span style={styles.spinner}>⟳</span>
-          ) : (
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <line x1="22" y1="2" x2="11" y2="13" />
-              <polygon points="22 2 15 22 11 13 2 9 22 2" />
-            </svg>
-          )}
-        </button>
-      </div>
-
-      <p style={styles.hint}>
-        Press <kbd style={styles.kbd}>Enter</kbd> to send ·{' '}
-        <kbd style={styles.kbd}>Shift + Enter</kbd> for new line
+          <button
+            type="submit"
+            disabled={!canSend}
+            style={{
+              ...styles.sendBtn,
+              ...(canSend ? styles.sendBtnActive : {}),
+            }}
+            title="Send message"
+          >
+            {isLoading ? (
+              <svg width="18" height="18" viewBox="0 0 24 24" style={{ animation: 'spin 1s linear infinite' }} fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+              </svg>
+            ) : (
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M3.478 2.405a.75.75 0 0 0-.926.94l2.432 7.905H13.5a.75.75 0 0 1 0 1.5H4.984l-2.432 7.905a.75.75 0 0 0 .926.94 60.519 60.519 0 0 0 18.445-8.986.75.75 0 0 0 0-1.218A60.517 60.517 0 0 0 3.478 2.405z" />
+              </svg>
+            )}
+          </button>
+        </div>
+      </form>
+      <p style={styles.disclaimer}>
+        Emotion detection powered by DistilBERT + Groq. Responses may vary.
       </p>
-    </form>
+    </div>
   );
 }
 
 const styles = {
-  form: {
-    padding: '16px 24px 12px',
-    borderTop: '1px solid #334155',
-    background: '#0f172a',
+  wrapper: {
+    padding: '0 16px 16px',
+    background: 'var(--color-bg-main)',
   },
-  inputContainer: {
+  form: {
+    maxWidth: 768,
+    margin: '0 auto',
+  },
+  inputBox: {
     display: 'flex',
     alignItems: 'flex-end',
-    gap: '8px',
-    background: '#1e293b',
-    border: '1px solid #334155',
-    borderRadius: '16px',
-    padding: '8px 8px 8px 16px',
-    transition: 'border-color 0.2s ease',
+    gap: 8,
+    background: 'var(--color-bg-input)',
+    border: '1px solid var(--color-border)',
+    borderRadius: 16,
+    padding: '10px 12px 10px 18px',
+    transition: 'border-color 0.25s ease, box-shadow 0.25s ease',
   },
-  input: {
+  textarea: {
     flex: 1,
     background: 'transparent',
     border: 'none',
     outline: 'none',
-    color: '#f1f5f9',
-    fontSize: '14px',
+    color: 'var(--color-text)',
+    fontSize: 15,
     fontFamily: 'inherit',
     resize: 'none',
     lineHeight: 1.5,
-    maxHeight: '120px',
-    minHeight: '24px',
+    maxHeight: 200,
+    minHeight: 24,
+    paddingTop: 2,
   },
-  inputDisabled: {
-    opacity: 0.5,
-    cursor: 'not-allowed',
-  },
-  sendButton: {
-    width: '40px',
-    height: '40px',
-    borderRadius: '12px',
+  sendBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
     border: 'none',
-    background: '#334155',
-    color: '#64748b',
-    cursor: 'not-allowed',
+    background: '#4a4a4a',
+    color: '#8e8ea0',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
+    cursor: 'not-allowed',
     transition: 'all 0.2s ease',
   },
-  sendButtonActive: {
-    background: '#6366f1',
-    color: '#ffffff',
+  sendBtnActive: {
+    background: 'var(--color-accent)',
+    color: '#fff',
     cursor: 'pointer',
-    boxShadow: '0 2px 8px rgba(99, 102, 241, 0.4)',
+    boxShadow: '0 2px 8px rgba(16, 163, 127, 0.3)',
   },
-  spinner: {
-    display: 'inline-block',
-    animation: 'spin 1s linear infinite',
-    fontSize: '18px',
-  },
-  hint: {
+  disclaimer: {
     textAlign: 'center',
-    fontSize: '11px',
-    color: '#475569',
-    marginTop: '8px',
+    fontSize: 12,
+    color: 'var(--color-text-muted)',
+    marginTop: 10,
     marginBottom: 0,
-  },
-  kbd: {
-    background: '#1e293b',
-    border: '1px solid #334155',
-    borderRadius: '4px',
-    padding: '1px 4px',
-    fontSize: '10px',
-    fontFamily: 'monospace',
-    color: '#94a3b8',
+    lineHeight: 1.4,
+    maxWidth: 768,
+    margin: '10px auto 0',
+    opacity: 0.7,
   },
 };

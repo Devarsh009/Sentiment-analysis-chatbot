@@ -1,44 +1,65 @@
 /**
- * ChatWindow Component
- * ======================
- * Main chat area that displays messages and the typing indicator.
- * Shows a welcome screen when no messages exist.
+ * ChatWindow — Message display + polished welcome screen
  */
 
 import React from 'react';
 import MessageBubble from './MessageBubble';
 
-export default function ChatWindow({ messages, isLoading, messagesEndRef }) {
-  // Welcome screen when no messages
+const SUGGESTIONS = [
+  { text: "I'm having an amazing day!", icon: "✨", sub: "Share your joy" },
+  { text: "I feel stressed about work", icon: "😔", sub: "Talk it out" },
+  { text: "Tell me something interesting", icon: "💡", sub: "Get inspired" },
+  { text: "I need some motivation", icon: "🚀", sub: "Get a boost" },
+];
+
+export default function ChatWindow({ messages, isLoading, messagesEndRef, onSuggestionClick }) {
   if (messages.length === 0) {
     return (
       <div style={styles.welcome}>
-        <div style={styles.welcomeContent}>
-          <span style={styles.welcomeIcon}>🤖</span>
-          <h2 style={styles.welcomeTitle}>Welcome to Sentiment Chatbot!</h2>
-          <p style={styles.welcomeText}>
-            I'm an AI chatbot that understands your emotions. Send me a message
-            and I'll detect your sentiment and respond accordingly.
-          </p>
-          <div style={styles.features}>
-            <div style={styles.featureCard}>
-              <span>😊</span>
-              <span>Positive → Enthusiastic replies</span>
-            </div>
-            <div style={styles.featureCard}>
-              <span>😔</span>
-              <span>Negative → Empathetic support</span>
-            </div>
-            <div style={styles.featureCard}>
-              <span>😐</span>
-              <span>Neutral → Helpful information</span>
-            </div>
+        <div style={styles.welcomeInner}>
+          {/* Logo */}
+          <div style={styles.logoCircle}>
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#10a37f" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 2a10 10 0 0 1 10 10 10 10 0 0 1-10 10A10 10 0 0 1 2 12 10 10 0 0 1 12 2z" />
+              <path d="M8 14s1.5 2 4 2 4-2 4-2" />
+              <line x1="9" y1="9" x2="9.01" y2="9" />
+              <line x1="15" y1="9" x2="15.01" y2="9" />
+            </svg>
           </div>
-          <p style={styles.tryText}>Try saying something like:</p>
+
+          <h1 style={styles.welcomeTitle}>How can I help you today?</h1>
+          <p style={styles.welcomeSubtitle}>
+            Ask me anything — I'm here to help.
+          </p>
+
+          {/* Suggestion cards */}
           <div style={styles.suggestions}>
-            <span style={styles.suggestion}>"I'm having a great day!"</span>
-            <span style={styles.suggestion}>"I feel frustrated with my work."</span>
-            <span style={styles.suggestion}>"What's the weather like?"</span>
+            {SUGGESTIONS.map((s, i) => (
+              <button
+                key={i}
+                style={styles.suggestionCard}
+                onClick={() => onSuggestionClick(s.text)}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#3a3a3a';
+                  e.currentTarget.style.borderColor = '#555';
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'var(--color-bg-input)';
+                  e.currentTarget.style.borderColor = 'var(--color-border)';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                }}
+              >
+                <span style={styles.suggestionIcon}>{s.icon}</span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <span style={styles.suggestionText}>{s.text}</span>
+                  <span style={styles.suggestionSub}>{s.sub}</span>
+                </div>
+                <svg style={styles.suggestionArrow} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <polyline points="9 18 15 12 9 6" />
+                </svg>
+              </button>
+            ))}
           </div>
         </div>
       </div>
@@ -52,21 +73,26 @@ export default function ChatWindow({ messages, isLoading, messagesEndRef }) {
           <MessageBubble key={msg.id} message={msg} />
         ))}
 
-        {/* Typing Indicator */}
         {isLoading && (
-          <div style={styles.typingContainer}>
-            <div style={styles.typingAvatar}>🤖</div>
-            <div style={styles.typingBubble}>
+          <div style={styles.typingRow}>
+            <div style={styles.typingInner}>
+              <div style={styles.typingAvatar}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10a37f" strokeWidth="2">
+                  <path d="M12 2a10 10 0 0 1 10 10 10 10 0 0 1-10 10A10 10 0 0 1 2 12 10 10 0 0 1 12 2z" />
+                  <path d="M8 14s1.5 2 4 2 4-2 4-2" />
+                  <line x1="9" y1="9" x2="9.01" y2="9" />
+                  <line x1="15" y1="9" x2="15.01" y2="9" />
+                </svg>
+              </div>
               <div style={styles.typingDots}>
-                <span style={{ ...styles.dot, animationDelay: '0s' }}>●</span>
-                <span style={{ ...styles.dot, animationDelay: '0.2s' }}>●</span>
-                <span style={{ ...styles.dot, animationDelay: '0.4s' }}>●</span>
+                <span style={{ ...styles.dot, animationDelay: '0s' }} />
+                <span style={{ ...styles.dot, animationDelay: '0.15s' }} />
+                <span style={{ ...styles.dot, animationDelay: '0.3s' }} />
               </div>
             </div>
           </div>
         )}
 
-        {/* Scroll anchor */}
         <div ref={messagesEndRef} />
       </div>
     </div>
@@ -77,13 +103,16 @@ const styles = {
   container: {
     flex: 1,
     overflowY: 'auto',
-    padding: '24px',
+    display: 'flex',
+    flexDirection: 'column',
   },
   messages: {
-    maxWidth: '800px',
+    maxWidth: 768,
+    width: '100%',
     margin: '0 auto',
+    padding: '24px 16px',
   },
-  // Welcome Screen
+  // Welcome
   welcome: {
     flex: 1,
     display: 'flex',
@@ -91,100 +120,121 @@ const styles = {
     justifyContent: 'center',
     padding: '40px 24px',
   },
-  welcomeContent: {
+  welcomeInner: {
     textAlign: 'center',
-    maxWidth: '500px',
+    maxWidth: 640,
+    width: '100%',
     animation: 'slideUp 0.5s ease-out',
   },
-  welcomeIcon: {
-    fontSize: '64px',
-    display: 'block',
-    marginBottom: '16px',
+  logoCircle: {
+    width: 56,
+    height: 56,
+    borderRadius: '50%',
+    background: 'rgba(16, 163, 127, 0.1)',
+    border: '1px solid rgba(16, 163, 127, 0.2)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    margin: '0 auto 20px',
+    animation: 'glow 3s ease-in-out infinite',
   },
   welcomeTitle: {
-    fontSize: '24px',
+    fontSize: 28,
     fontWeight: 700,
-    color: '#f1f5f9',
-    marginBottom: '12px',
+    color: 'var(--color-text)',
+    marginBottom: 8,
+    letterSpacing: '-0.02em',
   },
-  welcomeText: {
-    fontSize: '14px',
-    color: '#94a3b8',
-    lineHeight: 1.6,
-    marginBottom: '24px',
+  welcomeSubtitle: {
+    fontSize: 15,
+    color: 'var(--color-text-muted)',
+    marginBottom: 20,
+    lineHeight: 1.5,
   },
-  features: {
+  emotionChips: {
     display: 'flex',
-    gap: '12px',
-    justifyContent: 'center',
-    marginBottom: '24px',
     flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 8,
+    marginBottom: 32,
   },
-  featureCard: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-    padding: '8px 16px',
-    background: '#1e293b',
-    border: '1px solid #334155',
-    borderRadius: '12px',
-    fontSize: '13px',
-    color: '#cbd5e1',
-  },
-  tryText: {
-    fontSize: '13px',
-    color: '#64748b',
-    marginBottom: '12px',
+  chip: {
+    fontSize: 12,
+    padding: '5px 12px',
+    borderRadius: 20,
+    background: 'var(--color-bg-input)',
+    border: '1px solid var(--color-border)',
+    color: 'var(--color-text-secondary)',
   },
   suggestions: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: 10,
+    textAlign: 'left',
+  },
+  suggestionCard: {
     display: 'flex',
-    flexDirection: 'column',
-    gap: '8px',
     alignItems: 'center',
+    gap: 12,
+    padding: '14px 16px',
+    background: 'var(--color-bg-input)',
+    border: '1px solid var(--color-border)',
+    borderRadius: 14,
+    cursor: 'pointer',
+    transition: 'all 0.2s ease',
+    fontFamily: 'inherit',
+    color: 'var(--color-text)',
   },
-  suggestion: {
-    display: 'inline-block',
-    padding: '6px 16px',
-    background: '#1e293b',
-    border: '1px solid #334155',
-    borderRadius: '20px',
-    fontSize: '13px',
-    color: '#818cf8',
-    fontStyle: 'italic',
+  suggestionIcon: {
+    fontSize: 20,
+    flexShrink: 0,
   },
-  // Typing Indicator
-  typingContainer: {
+  suggestionText: {
+    display: 'block',
+    fontSize: 13,
+    lineHeight: 1.4,
+    fontWeight: 500,
+  },
+  suggestionSub: {
+    display: 'block',
+    fontSize: 11,
+    color: 'var(--color-text-muted)',
+    marginTop: 1,
+  },
+  suggestionArrow: {
+    color: 'var(--color-text-muted)',
+    flexShrink: 0,
+    opacity: 0.4,
+  },
+  // Typing indicator
+  typingRow: {
+    padding: '18px 0',
+    animation: 'fadeIn 0.2s ease-out',
+  },
+  typingInner: {
     display: 'flex',
-    alignItems: 'flex-end',
-    gap: '8px',
-    marginBottom: '16px',
-    animation: 'fadeIn 0.3s ease-out',
+    alignItems: 'center',
+    gap: 12,
   },
   typingAvatar: {
-    width: '36px',
-    height: '36px',
-    borderRadius: '50%',
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    background: 'linear-gradient(135deg, #1a7f64, #10a37f)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    fontSize: '18px',
-    background: '#1e293b',
-    border: '1px solid #334155',
-  },
-  typingBubble: {
-    padding: '12px 20px',
-    background: '#1e293b',
-    border: '1px solid #334155',
-    borderRadius: '16px',
-    borderBottomLeftRadius: '4px',
+    flexShrink: 0,
   },
   typingDots: {
     display: 'flex',
-    gap: '4px',
+    gap: 4,
   },
   dot: {
-    fontSize: '12px',
-    color: '#6366f1',
-    animation: 'typing 1.4s infinite',
+    width: 7,
+    height: 7,
+    borderRadius: '50%',
+    background: 'var(--color-text-muted)',
+    animation: 'dotPulse 1.2s ease-in-out infinite',
   },
 };

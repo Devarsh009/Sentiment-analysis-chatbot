@@ -1,60 +1,48 @@
 /**
- * SentimentBadge Component
- * ==========================
- * Displays the detected sentiment as a colored badge.
- * Shows sentiment label and confidence percentage.
+ * SentimentBadge — Emotion-aware pill badge with icon + label
+ * Shows granular emotion (angry, happy, curious, etc.) with color coding
  */
 
 import React from 'react';
 
-export default function SentimentBadge({ sentiment, confidence }) {
-  const config = {
-    positive: {
-      color: '#22c55e',
-      bg: 'rgba(34, 197, 94, 0.15)',
-      border: 'rgba(34, 197, 94, 0.3)',
-      icon: '😊',
-      label: 'Positive',
-    },
-    negative: {
-      color: '#ef4444',
-      bg: 'rgba(239, 68, 68, 0.15)',
-      border: 'rgba(239, 68, 68, 0.3)',
-      icon: '😔',
-      label: 'Negative',
-    },
-    neutral: {
-      color: '#f59e0b',
-      bg: 'rgba(245, 158, 11, 0.15)',
-      border: 'rgba(245, 158, 11, 0.3)',
-      icon: '😐',
-      label: 'Neutral',
-    },
-  };
+const EMOTION_CONFIG = {
+  angry:        { icon: '😠', label: 'Angry',        color: 'var(--emotion-angry)' },
+  frustrated:   { icon: '😤', label: 'Frustrated',   color: 'var(--emotion-frustrated)' },
+  sad:          { icon: '😢', label: 'Sad',           color: 'var(--emotion-sad)' },
+  worried:      { icon: '😟', label: 'Worried',       color: 'var(--emotion-worried)' },
+  disappointed: { icon: '😞', label: 'Disappointed',  color: 'var(--emotion-disappointed)' },
+  excited:      { icon: '🤩', label: 'Excited',       color: 'var(--emotion-excited)' },
+  grateful:     { icon: '🙏', label: 'Grateful',      color: 'var(--emotion-grateful)' },
+  happy:        { icon: '😊', label: 'Happy',         color: 'var(--emotion-happy)' },
+  proud:        { icon: '💪', label: 'Proud',         color: 'var(--emotion-proud)' },
+  curious:      { icon: '🤔', label: 'Curious',       color: 'var(--emotion-curious)' },
+  confused:     { icon: '😕', label: 'Confused',      color: 'var(--emotion-confused)' },
+  thoughtful:   { icon: '💭', label: 'Thoughtful',    color: 'var(--emotion-thoughtful)' },
+  normal:       { icon: '💬', label: 'Neutral',       color: 'var(--emotion-normal)' },
+};
 
-  const cfg = config[sentiment] || config.neutral;
-  const confidencePercent = Math.round((confidence || 0) * 100);
+export default function SentimentBadge({ sentiment, confidence, emotion }) {
+  const key = emotion || sentiment || 'normal';
+  const cfg = EMOTION_CONFIG[key] || EMOTION_CONFIG.normal;
+  const pct = Math.round((confidence || 0) * 100);
 
   return (
-    <div
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: '4px',
-        padding: '2px 8px',
-        borderRadius: '12px',
-        backgroundColor: cfg.bg,
-        border: `1px solid ${cfg.border}`,
-        fontSize: '11px',
-        fontWeight: 500,
-        color: cfg.color,
-        marginTop: '4px',
-      }}
-    >
-      <span>{cfg.icon}</span>
-      <span>{cfg.label}</span>
-      <span style={{ opacity: 0.7 }}>·</span>
-      <span style={{ opacity: 0.8 }}>{confidencePercent}%</span>
-    </div>
+    <span style={{
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: 5,
+      padding: '3px 10px 3px 6px',
+      borderRadius: 20,
+      background: `color-mix(in srgb, ${cfg.color} 12%, transparent)`,
+      fontSize: 12,
+      fontWeight: 500,
+      color: cfg.color,
+      letterSpacing: '0.01em',
+      transition: 'all 0.2s ease',
+      animation: 'scaleIn 0.2s ease-out',
+    }}>
+      <span style={{ fontSize: 13, lineHeight: 1 }}>{cfg.icon}</span>
+      {cfg.label} · {pct}%
+    </span>
   );
 }

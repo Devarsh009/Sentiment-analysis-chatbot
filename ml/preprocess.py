@@ -17,7 +17,7 @@ import os
 import sys
 import argparse
 import pandas as pd
-from datasets import load_dataset, Dataset, DatasetDict
+from datasets import load_dataset, Dataset, DatasetDict, ClassLabel, Features, Value
 from transformers import AutoTokenizer
 from config import (
     MODEL_NAME, MAX_SEQ_LENGTH, DATA_DIR,
@@ -54,6 +54,10 @@ def load_huggingface_dataset(dataset_name: str = DATASET_NAME) -> DatasetDict:
                 example["label"] = 2   # positive
             return example
         
+        # Cast label column to plain int to avoid ClassLabel num_classes conflict
+        for split in dataset:
+            dataset[split] = dataset[split].cast_column("label", Value("int64"))
+        
         dataset = dataset.map(remap_sst2_labels)
         
         # Rename 'sentence' column to 'text' for consistency
@@ -72,6 +76,10 @@ def load_huggingface_dataset(dataset_name: str = DATASET_NAME) -> DatasetDict:
             else:
                 example["label"] = 2   # positive
             return example
+        
+        # Cast label column to plain int to avoid ClassLabel num_classes conflict
+        for split in dataset:
+            dataset[split] = dataset[split].cast_column("label", Value("int64"))
         
         dataset = dataset.map(remap_imdb_labels)
         
