@@ -46,11 +46,15 @@ class DatabaseService:
             return
         
         if db_path is None:
-            db_path = os.path.join(
-                os.path.dirname(os.path.dirname(os.path.dirname(
-                    os.path.abspath(__file__)))),
-                "chatbot.db"
-            )
+            # On Vercel, filesystem is read-only except /tmp/
+            if os.environ.get("VERCEL"):
+                db_path = "/tmp/chatbot.db"
+            else:
+                db_path = os.path.join(
+                    os.path.dirname(os.path.dirname(os.path.dirname(
+                        os.path.abspath(__file__)))),
+                    "chatbot.db"
+                )
         
         self.db_path = db_path
     
